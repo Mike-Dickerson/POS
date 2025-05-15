@@ -1,16 +1,16 @@
-# POS Demo System
+# Minimal Kafka Demo
 
-## How to Run
+## Start it up
+```bash
+docker-compose up --build
+```
 
-1. Start Kafka:
-   docker-compose -f docker-compose.kafka.yml up -d
+## Use It
+- Go to http://localhost:3000
+- Type a message and click send
+- Watch the terminal logs:
+  - Web logs user input
+  - Producer sends to Kafka
+  - Consumer logs the received message
 
-2. Start Store:
-   docker-compose -f docker-compose.store.yml up -d
-
-3. Start Cloud:
-   docker-compose -f docker-compose.cloud.yml up -d
-
-Visit:
-- Store UI: http://localhost:3000
-- Cloud UI: http://localhost:3001
+Kafka can be restarted mid-demo to show retry logic.

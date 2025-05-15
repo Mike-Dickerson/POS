@@ -1,0 +1,23 @@
+
+<!DOCTYPE html>
+<html>
+<head><title>Minimal Kafka Demo</title></head>
+<body>
+  <h1>Send Message to Kafka</h1>
+  <input type="text" id="message" />
+  <button onclick="send()">Send</button>
+  <script>
+    async function send() {
+      const msg = document.getElementById('message').value;
+      console.log("User entered:", msg);
+      const res = await fetch('/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+      });
+      const result = await res.json();
+      console.log(result);
+    }
+  </script>
+</body>
+</html>
