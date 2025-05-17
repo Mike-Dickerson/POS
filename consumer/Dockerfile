@@ -1,5 +1,5 @@
-FROM python:3.11-slim
+FROM node:18
 WORKDIR /app
 COPY . .
-RUN pip install kafka-python flask
-CMD ["python", "consumer.py"]
+RUN npm install kafkajs
+CMD ["node", "index.js"]

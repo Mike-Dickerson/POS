@@ -1,39 +1,17 @@
-import time
-import json
 from kafka import KafkaProducer
-from kafka.errors import NoBrokersAvailable
-from flask import Flask, request
+import time
 
-app = Flask(__name__)
 producer = None
-
-def connect_kafka():
-    global producer
-    delay = 2
-    while True:
-        try:
-            producer = KafkaProducer(
-                bootstrap_servers='kafka:9092',
-                value_serializer=lambda v: json.dumps(v).encode('utf-8')
-            )
-            print("Connected to Kafka.")
-            break
-        except NoBrokersAvailable:
-            print(f"Kafka unavailable. Retrying in {delay}s...")
-            time.sleep(delay)
-
-connect_kafka()
-
-@app.route('/send', methods=['POST'])
-def send():
-    data = request.json
-    print("User entered:", data)
+while producer is None:
     try:
-        producer.send('test_topic', data)
-        print("Producer sent:", data)
-        return {"status": "sent"}
+        producer = KafkaProducer(bootstrap_servers='kafka:9092')
+        print("✅ Producer connected to Kafka.")
     except Exception as e:
-        print("Kafka error:", e)
-        return {"status": "error"}, 500
+        print(f"❌ Kafka connection failed. Retrying... ({e})")
+        time.sleep(5)
 
-app.run(host='0.0.0.0', port=5000)
+print("Waiting for input...")
+while True:
+    msg = input("Enter a message to send: ")
+    producer.send('pos-demo', msg.encode('utf-8'))
+    print(f"📤 Sent: {msg}")
