@@ -43,6 +43,7 @@ const htmlPage = `
         body: JSON.stringify({ message: msg })
       }).then(res => res.text()).then(txt => {
         document.getElementById('status').innerText = txt;
+        msgInput.value = '';
       });
     }
   </script>
