@@ -1,6 +1,5 @@
 const http = require('http');
 const { Kafka } = require('kafkajs');
-const consumer = kafka.consumer({ groupId: 'pos-group', retry: { retries: Number.MAX_SAFE_INTEGER } });
 
 let messages = [];
 
@@ -8,6 +7,8 @@ const kafka = new Kafka({
   clientId: 'pos-consumer',
   brokers: ['kafka:9092']
 });
+
+const consumer = kafka.consumer({ groupId: 'pos-group', retry: { retries: Number.MAX_SAFE_INTEGER } });
 
 async function initConsumer() {
   while (true) {
