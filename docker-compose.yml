@@ -30,6 +30,7 @@ services:
       - "3001:3001"
     depends_on:
       - kafka
+    restart: always
 
   web-ui:
     build: ./web-ui
