@@ -1,6 +1,4 @@
 const http = require('http');
-const fs = require('fs');
-const path = require('path');
 const { Kafka } = require('kafkajs');
 
 const kafka = new Kafka({
@@ -9,7 +7,6 @@ const kafka = new Kafka({
 });
 
 const producer = kafka.producer();
-
 let queue = [];
 let sending = false;
 
@@ -34,22 +31,6 @@ async function processQueue() {
 
   sending = false;
 }
-
-// Handle /send POST request
-if (req.method === 'POST' && req.url === '/send') {
-  let body = '';
-  req.on('data', chunk => (body += chunk));
-  req.on('end', () => {
-    const { message } = JSON.parse(body || '{}');
-    if (message && message.trim()) {
-      queue.push(message.trim());
-      processQueue();
-    }
-    res.writeHead(200);
-    res.end("✅ Queued for delivery");
-  });
-}
-
 
 async function initProducer() {
   while (true) {
@@ -77,14 +58,15 @@ const htmlPage = `
   <p id="status"></p>
   <script>
     function send() {
-      const msg = document.getElementById('message').value;
+      const msgInput = document.getElementById('message');
+      const msg = msgInput.value;
       fetch('/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: msg })
       }).then(res => res.text()).then(txt => {
         document.getElementById('status').innerText = txt;
-        msgInput.value = '';
+        msgInput.value = ''; // ✅ Clears the field after sending
       });
     }
   </script>
@@ -92,16 +74,16 @@ const htmlPage = `
 </html>
 `;
 
-const server = http.createServer(async (req, res) => {
+const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(htmlPage);
   } else if (req.method === 'POST' && req.url === '/send') {
     let body = '';
     req.on('data', chunk => (body += chunk));
-    req.on('end', async () => {
-      const { message } = JSON.parse(body);
+    req.on('end', () => {
       try {
+        const { message } = JSON.parse(body || '{}');
         if (message && message.trim()) {
           queue.push(message.trim());
           processQueue();
