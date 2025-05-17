@@ -10,6 +10,47 @@ const kafka = new Kafka({
 
 const producer = kafka.producer();
 
+let queue = [];
+let sending = false;
+
+async function processQueue() {
+  if (sending || queue.length === 0) return;
+  sending = true;
+
+  while (queue.length > 0) {
+    const msg = queue[0];
+    try {
+      await producer.send({
+        topic: 'pos-demo',
+        messages: [{ value: msg }]
+      });
+      console.log(`📤 Sent to Kafka: ${msg}`);
+      queue.shift();
+    } catch (err) {
+      console.warn(`⚠️ Failed to send, will retry: ${msg}`, err.message);
+      await new Promise(res => setTimeout(res, 3000));
+    }
+  }
+
+  sending = false;
+}
+
+// Handle /send POST request
+if (req.method === 'POST' && req.url === '/send') {
+  let body = '';
+  req.on('data', chunk => (body += chunk));
+  req.on('end', () => {
+    const { message } = JSON.parse(body || '{}');
+    if (message && message.trim()) {
+      queue.push(message.trim());
+      processQueue();
+    }
+    res.writeHead(200);
+    res.end("✅ Queued for delivery");
+  });
+}
+
+
 async function initProducer() {
   while (true) {
     try {
@@ -61,13 +102,12 @@ const server = http.createServer(async (req, res) => {
     req.on('end', async () => {
       const { message } = JSON.parse(body);
       try {
-        await producer.send({
-          topic: 'pos-demo',
-          messages: [{ value: message }]
-        });
-        console.log(`📤 Sent to Kafka: ${message}`);
+        if (message && message.trim()) {
+          queue.push(message.trim());
+          processQueue();
+        }
         res.writeHead(200);
-        res.end("✅ Sent!");
+        res.end("✅ Queued for delivery");
       } catch (e) {
         console.error("⚠️ Kafka send error", e);
         res.writeHead(500);
