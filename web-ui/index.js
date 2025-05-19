@@ -81,7 +81,7 @@ const htmlPage = `
         .catch(() => {
           document.getElementById('statusDot').style.background = 'red';
         });
-    }, 3000);
+    }, 750);
   </script>
 </body>
 </html>
