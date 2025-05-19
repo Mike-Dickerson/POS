@@ -73,15 +73,23 @@ const htmlPage = `
       });
     }
 
+    let lastStatus = null;
     setInterval(() => {
       fetch('/kafka-status')
         .then(res => {
-          document.getElementById('statusDot').style.background = res.ok ? 'green' : 'red';
+          const current = res.ok ? 'green' : 'red';
+          if (current !== lastStatus) {
+            document.getElementById('statusDot').style.background = current;
+            lastStatus = current;
+          }
         })
         .catch(() => {
-          document.getElementById('statusDot').style.background = 'red';
+          if (lastStatus !== 'red') {
+            document.getElementById('statusDot').style.background = 'red';
+            lastStatus = 'red';
+          }
         });
-    }, 750);
+    }, 1000);
   </script>
 </body>
 </html>
@@ -99,7 +107,9 @@ const server = http.createServer((req, res) => {
         const { message } = JSON.parse(body || '{}');
         if (message && message.trim()) {
           queue.push(message.trim());
-          processQueue();
+
+          // Run Kafka logic non-blocking
+          setImmediate(() => processQueue());
         }
         res.writeHead(200);
         res.end("✅ Queued for delivery");
