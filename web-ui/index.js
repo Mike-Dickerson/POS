@@ -1,10 +1,3 @@
-from pathlib import Path
-
-# Recreate the updated index.js after environment reset
-index_path = Path("/mnt/data/index.js")
-
-# Full corrected and updated index.js content
-updated_index_js = """\
 const http = require('http');
 const { Kafka } = require('kafkajs');
 
@@ -139,8 +132,3 @@ const server = http.createServer((req, res) => {
 server.listen(3000, () => {
   console.log("🌐 Web UI (Store Input) on http://localhost:3000");
 });
-
-
-// Save to file
-index_path.write_text(updated_index_js)
-index_path.name
