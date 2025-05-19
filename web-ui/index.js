@@ -1,3 +1,10 @@
+from pathlib import Path
+
+# Recreate the updated index.js after environment reset
+index_path = Path("/mnt/data/index.js")
+
+# Full corrected and updated index.js content
+updated_index_js = """\
 const http = require('http');
 const { Kafka } = require('kafkajs');
 
@@ -56,6 +63,9 @@ const htmlPage = `
   <input id="message" placeholder="Enter item or message" />
   <button onclick="send()">Send</button>
   <p id="status"></p>
+  <div style="position: absolute; top: 10px; right: 10px;">
+    <div id="statusDot" style="width: 12px; height: 12px; border-radius: 50%; background: gray;"></div>
+  </div>
   <script>
     function send() {
       const msgInput = document.getElementById('message');
@@ -66,9 +76,19 @@ const htmlPage = `
         body: JSON.stringify({ message: msg })
       }).then(res => res.text()).then(txt => {
         document.getElementById('status').innerText = txt;
-        msgInput.value = ''; // ✅ Clears the field after sending
+        msgInput.value = '';
       });
     }
+
+    setInterval(() => {
+      fetch('/kafka-status')
+        .then(res => {
+          document.getElementById('statusDot').style.background = res.ok ? 'green' : 'red';
+        })
+        .catch(() => {
+          document.getElementById('statusDot').style.background = 'red';
+        });
+    }, 3000);
   </script>
 </body>
 </html>
@@ -96,6 +116,20 @@ const server = http.createServer((req, res) => {
         res.end("❌ Failed to send");
       }
     });
+  } else if (req.method === 'GET' && req.url === '/kafka-status') {
+    const admin = kafka.admin();
+    (async () => {
+      try {
+        await admin.connect();
+        await admin.listTopics();
+        await admin.disconnect();
+        res.writeHead(200);
+        res.end('OK');
+      } catch (err) {
+        res.writeHead(503);
+        res.end('Unavailable');
+      }
+    })();
   } else {
     res.writeHead(404);
     res.end();
@@ -105,3 +139,8 @@ const server = http.createServer((req, res) => {
 server.listen(3000, () => {
   console.log("🌐 Web UI (Store Input) on http://localhost:3000");
 });
+
+
+// Save to file
+index_path.write_text(updated_index_js)
+index_path.name
